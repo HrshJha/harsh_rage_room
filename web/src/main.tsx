@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import './styles/app.css';
+import './styles/cinematic.css';
 import App from './App';
 const root = document.getElementById('root')!;
 const app = (

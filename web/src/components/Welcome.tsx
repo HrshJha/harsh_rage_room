@@ -1,6 +1,5 @@
 import { HarshRig } from './HarshRig';
 import { Lion } from './Lion';
-import { WeaponArt } from './WeaponArt';
 import { Icon } from './Icon';
 import { useGame } from '../core/store';
 import { audio } from '../engine/audio';
@@ -9,33 +8,21 @@ import { useState } from 'react';
 export function HeroArt({ angry = false }: { angry?: boolean }) {
   return (
     <div className={`hero-art ${angry ? 'hero-art-angry' : ''}`}>
-      <div className="hero-orbit orbit-one" />
-      <div className="hero-orbit orbit-two" />
-      <div className="hero-burst" />
-      <span className="art-star star-one">✦</span>
-      <span className="art-star star-two">✧</span>
-      <div className="hero-sticker sticker-top">
-        BIG EGO.
-        <br />
-        SMALL HITBOX.
-      </div>
+      <div className="hero-room-lines" aria-hidden="true" />
+      <div className="hero-disc" aria-hidden="true" />
+      <div className="hero-art-index">SUBJECT / 001</div>
       <div className="hero-character">
         <HarshRig expression={angry ? 'nervous' : 'smug'} />
       </div>
-      <div className="floating-weapon fw-one">
-        <WeaponArt id="chappal" />
-      </div>
-      <div className="floating-weapon fw-two">
-        <WeaponArt id="tomato" />
-      </div>
-      <div className="hero-sticker sticker-bottom">
-        <span className="scribble-arrow">↖</span> THIS GUY.
-      </div>
-      <span className="hero-art-caption">
-        NO HARSHES WERE HARMED.
+      <div className="hero-sticker sticker-top">
+        BIG EGO.
         <br />
-        HIS EGO? DIFFERENT STORY.
-      </span>
+        MEET CONSEQUENCES.
+      </div>
+      <div className="hero-art-caption">
+        <span>HARSH</span>
+        <small>THE REASON YOU’RE HERE.</small>
+      </div>
     </div>
   );
 }
@@ -54,17 +41,18 @@ export function Welcome() {
   return (
     <div className={`welcome scene-content ${gate ? 'welcome-entry' : ''}`}>
       <div className="hero-copy">
-        <div className="eyebrow">
-          <span className="tiny-star">✦</span> A HIGHLY UNNECESSARY SOLUTION
-        </div>
+        <div className="eyebrow">A PERSONAL MATTER / EST. 2026</div>
         {gate ? (
           <>
-            <h1 className="entry-title">
-              WELCOME TO
-              <br />
-              <span className="yellow-text">THE RAGE ROOM.</span>
+            <h1 className="entry-title" aria-label="WELCOME TO THE RAGE ROOM.">
+              <span className="entry-kicker">WELCOME TO THE</span>
+              <span className="entry-display">
+                RAGE
+                <br />
+                <em>ROOM.</em>
+              </span>
             </h1>
-            <p className="hero-subtitle">Before you start causing chaos, tell us who you are.</p>
+            <p className="hero-subtitle">Bad day? Good. Leave it here.</p>
           </>
         ) : (
           <>
@@ -149,9 +137,9 @@ export function Welcome() {
           <p>
             <strong>CHOTA SHER IS WATCHING.</strong>
             <br />
-            Big moments get tattled to Harsh on Telegram.
+            Your completed moves go straight to Harsh’s Telegram.
             <br />
-            <span>No account. No judgement. Okay, a little judgement.</span>
+            <span>Fictional violence. Very real receipts.</span>
           </p>
         </div>
       </div>

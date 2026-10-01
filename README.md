@@ -17,7 +17,7 @@ Open **http://localhost:5178**. The API runs on port **8787**. Without an enviro
 
 ## Play
 
-Enter a name, or leave it blank to play anonymously, and choose sound or silence. The name lasts for the current browser session. Answer the extremely serious questions and select a weapon. Tap Harsh to aim, or double-click a weapon to auto-aim. Select **Roast Harsh** to write a roast of up to 280 characters. Build rage for Thunder Punch and Emotional Damage. The NO branch has a lie detector, compliments, and a kindness certificate. Completed attacks and submitted roasts are reported to Telegram when live delivery is enabled, subject to spam limits.
+Enter a name, or leave it blank to play anonymously, and choose sound or silence. The name lasts for the current browser session. Answer the extremely serious questions and select a weapon. Tap Harsh to aim, or tap a weapon once to auto-aim. Select **Roast Harsh** to write a roast of up to 280 characters. Build rage for Thunder Punch and Emotional Damage. The NO branch has a lie detector, compliments, and a kindness certificate. Completed attacks and submitted roasts are reported to Telegram when live delivery is enabled, subject to spam limits.
 
 Keyboard: **1–8** equip, **Space/Enter** attack when the stage/main area is focused, **M** mute, **Esc** settings. Hold the scanner using Space. Calm Chaos replaces dramatic movement with short comic beats. Lite effects reduce particle count. Browser pinch zoom remains available.
 

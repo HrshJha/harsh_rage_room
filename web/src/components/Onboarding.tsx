@@ -120,8 +120,8 @@ export function AngerScreen() {
           </>
         )}
       </div>
-      <div className="anger-art">
-        <HeroArt angry={selected > 1} />
+      <div className={`anger-art anger-mood-${selected}`}>
+        <HeroArt key={selected} angry={selected > 1} />
         <div className={`rage-readout level-${selected}`}>
           <span>INITIAL RAGE</span>
           <strong>

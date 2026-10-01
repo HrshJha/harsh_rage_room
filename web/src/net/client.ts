@@ -284,6 +284,7 @@ export function connectNetwork() {
         roastText: event.roastText,
         name: s.name,
         anger: angerKeys[s.fight.anger],
+        combo: event.comboName ? { name: event.comboName, length: s.fight.combo } : undefined,
       });
     } else if (event.type === 'compliment')
       session.enqueue({

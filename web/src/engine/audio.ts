@@ -290,10 +290,10 @@ class SoundEngine {
     );
   }
   attackStart(id: AttackId) {
-    if (id === 'thunder') this.tone(75, 480, 0.8, 0.09, 'sawtooth', 'impact', 'anticipation');
+    if (id === 'thunder') this.tone(75, 480, 0.54, 0.09, 'sawtooth', 'impact', 'anticipation');
     else if (id === 'emotional') {
       [220, 245, 275].forEach((n, i) =>
-        this.tone(n, n * 0.84, 0.22, 0.055, 'triangle', 'impact', 'anticipation', 0.22 + i * 0.28),
+        this.tone(n, n * 0.84, 0.22, 0.055, 'triangle', 'impact', 'anticipation', 0.1 + i * 0.18),
       );
     } else
       this.noise(

@@ -111,7 +111,7 @@ function Experience() {
           </span>
         </a>
         <div className="header-center">
-          <span className="status-dot" /> OPEN FOR EMOTIONAL BUSINESS
+          <span className="status-dot" /> EGO DISPOSAL. OPEN LATE.
         </div>
         <div className="header-controls">
           <button
@@ -132,7 +132,7 @@ function Experience() {
             <Icon name="settings" />
           </button>
           <span className="header-edition">
-            VOL. 01
+            ROOM 001
             <br />
             <strong>EST. 2026</strong>
           </span>

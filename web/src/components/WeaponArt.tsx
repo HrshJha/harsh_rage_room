@@ -2,7 +2,7 @@ import type { AttackId } from '../../../shared/contracts';
 export function WeaponArt({ id, className = '' }: { id: AttackId; className?: string }) {
   return (
     <svg viewBox="0 0 100 100" className={`weapon-art ${className}`} aria-hidden="true">
-      <g stroke="#241829" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round">
+      <g stroke="#241d17" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round">
         {id === 'slap' && (
           <g transform="rotate(-18 50 50)">
             <path
@@ -28,10 +28,10 @@ export function WeaponArt({ id, className = '' }: { id: AttackId; className?: st
         {id === 'chappal' && (
           <g transform="rotate(35 50 50)">
             <path
-              fill="#8650d2"
+              fill="#976c42"
               d="M31 22Q48-4 67 17q9 11 5 34L63 84q-7 18-27 9-12-5-10-18l3-39Z"
             />
-            <path fill="#b69ae8" d="M34 26q14-19 28-7 8 8 5 22L57 80q-5 11-16 6-9-3-6-13Z" />
+            <path fill="#cfaa6c" d="M34 26q14-19 28-7 8 8 5 22L57 80q-5 11-16 6-9-3-6-13Z" />
             <path fill="none" stroke="#f8e5bc" strokeWidth="8" d="m32 51 18-14 15 13M50 37l3-16" />
             <path d="M35 77h21" opacity=".4" />
           </g>
@@ -63,14 +63,14 @@ export function WeaponArt({ id, className = '' }: { id: AttackId; className?: st
         )}
         {id === 'thunder' && (
           <>
-            <path fill="#b6ff63" d="M51 3 18 55h29l-5 42 42-59H57L70 3Z" />
-            <path stroke="#f5ffd8" strokeWidth="4" d="M48 22 32 47h23" />
+            <path fill="#ffc175" d="M51 3 18 55h29l-5 42 42-59H57L70 3Z" />
+            <path stroke="#fff0ce" strokeWidth="4" d="M48 22 32 47h23" />
           </>
         )}
         {id === 'emotional' && (
           <>
-            <path fill="#ff91bf" d="M49 27Q28-1 11 25-3 48 49 90q51-40 41-62-12-29-35-6" />
-            <path fill="#241829" stroke="none" d="m50 15-9 26 16 7-16 23 8 19 16-35-13-12 12-23Z" />
+            <path fill="#e8a58c" d="M49 27Q28-1 11 25-3 48 49 90q51-40 41-62-12-29-35-6" />
+            <path fill="#241d17" stroke="none" d="m50 15-9 26 16 7-16 23 8 19 16-35-13-12 12-23Z" />
             <path stroke="#ffd2e3" strokeWidth="6" d="M20 29q-8 8 1 18" />
           </>
         )}

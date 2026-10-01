@@ -20,14 +20,13 @@ export default function Room() {
     [complaint, setComplaint] = useState(false),
     [roast, setRoast] = useState(false),
     [roastDraft, setRoastDraft] = useState(''),
-    [roastText, setRoastText] = useState(''),
     [intro, setIntro] = useState(true);
   useEffect(() => {
     void audio.prepare();
     const t = setTimeout(() => {
       setIntro(false);
       audio.roomEnter();
-    }, 1000);
+    }, 650);
     return () => clearTimeout(t);
   }, []);
   useEffect(() => {
@@ -55,9 +54,9 @@ export default function Room() {
     <div className="room scene-content">
       <div className="room-heading">
         <div>
-          <div className="eyebrow">WELCOME TO YOUR SAFE(ISH) SPACE</div>
+          <div className="eyebrow">{name || 'ANONYMOUS'} / YOU’RE IN CONTROL</div>
           <h1>
-            LET’S SETTLE <span className="yellow-text">THIS.</span>
+            MAKE IT <span className="yellow-text">PERSONAL.</span>
           </h1>
         </div>
         <div className="round-tag">
@@ -173,13 +172,12 @@ export default function Room() {
                   aria-pressed={weapon === w.id}
                   disabled={locked}
                   style={{ '--weapon-color': w.color } as React.CSSProperties}
-                  onClick={() => {
+                  onClick={(e) => {
+                    if (e.detail > 1) return;
                     audio.click();
                     useGame.getState().setWeapon(w.id);
                     if (w.id === 'roast') setRoast(true);
-                  }}
-                  onDoubleClick={() => {
-                    if (w.id !== 'roast') stage.current?.attack();
+                    else stage.current?.attack();
                   }}
                 >
                   <span className="weapon-key">{i + 1}</span>
@@ -198,7 +196,7 @@ export default function Room() {
           </div>
           <p className="weapon-description">{weaponById[weapon].description}</p>
           <span className="dock-tip">
-            <Icon name="keyboard" size={15} /> 1–8 TO EQUIP · SPACE TO HIT
+            <Icon name="keyboard" size={15} /> TAP A MOVE · 1–8 + SPACE ON KEYS
           </span>
         </aside>
       </div>
@@ -238,11 +236,6 @@ export default function Room() {
           ? `Attack ${fight.attacks}. Harsh's ego ${fight.ego} percent. Rage ${fight.rage} percent.`
           : ''}
       </div>
-      {roastText && (
-        <div className="roast-projectile" onAnimationEnd={() => setRoastText('')}>
-          {roastText}
-        </div>
-      )}
       {complaint && (
         <Modal title="FILE A COMPLAINT" onClose={() => setComplaint(false)}>
           <p className="muted">Completely optional. Exceptionally petty.</p>
@@ -291,7 +284,6 @@ export default function Room() {
               if (!roastDraft.trim()) return;
               const submitted = roastDraft;
               setRoast(false);
-              setRoastText(submitted);
               setRoastDraft('');
               stage.current?.attack('torso', submitted);
             }}

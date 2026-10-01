@@ -10,19 +10,19 @@
 :root {
   font-family: 'Rubik Variable', sans-serif;
   color: #f5eddf;
-  background: #171321;
+  background: #111211;
   font-synthesis: none;
-  --ink: #171321;
-  --surface: #211c2c;
-  --line: #393140;
+  --ink: #111211;
+  --surface: #1a1b18;
+  --line: #3c3b33;
   --paper: #f5eddf;
-  --muted: #a69caa;
-  --yellow: #ffd55b;
-  --red: #ff745f;
-  --purple: #b99ae9;
-  --pink: #ffa0c5;
-  --cyan: #85d8e1;
-  --lime: #b6ff63;
+  --muted: #b0aa9e;
+  --yellow: #f2ac69;
+  --red: #f06c3d;
+  --purple: #d4a16d;
+  --pink: #eab199;
+  --cyan: #d9c9ad;
+  --lime: #e6ba7b;
 }
 * {
   box-sizing: border-box;
@@ -718,7 +718,7 @@ main {
 }
 .anger-option.selected {
   border-color: var(--yellow);
-  background: #ffd55b12;
+  background: #f2ac6912;
   color: var(--yellow);
 }
 .anger-number {
@@ -816,7 +816,7 @@ main {
   border-radius: 10px;
 }
 .mash-button {
-  border: 4px solid #171321;
+  border: 4px solid #111211;
   box-shadow: 0 10px 0 #922d3e;
   background: var(--red);
   color: var(--ink);
@@ -1074,7 +1074,7 @@ main {
   display: flex;
   align-items: center;
   gap: 24px;
-  background: #221c2d;
+  background: #26251f;
   border: 1px solid #493b55;
   border-radius: 8px;
   padding: 17px 23px;
@@ -1101,13 +1101,13 @@ main {
 }
 .meter-label small {
   font-size: 9px;
-  color: #a798b4;
+  color: #b3aa9c;
   font-weight: 400;
   margin-left: 3px;
 }
 .meter-track {
   height: 10px;
-  background: #100d17;
+  background: #11120f;
   transform: skewX(-10deg);
   border-radius: 2px;
   overflow: hidden;
@@ -1121,8 +1121,8 @@ main {
     90deg,
     transparent 0,
     transparent calc(10% - 2px),
-    #221c2d calc(10% - 2px),
-    #221c2d 10%
+    #26251f calc(10% - 2px),
+    #26251f 10%
   );
 }
 .meter-track i {
@@ -1138,7 +1138,7 @@ main {
   font-size: 7px;
   letter-spacing: 0.8px;
   margin-top: 7px;
-  color: #a595b4;
+  color: #b3aa9c;
 }
 .hud-divider {
   height: 37px;
@@ -1148,13 +1148,13 @@ main {
 .hud-score {
   min-width: 125px;
   padding-left: 25px;
-  border-left: 1px solid #4f3c5d;
+  border-left: 1px solid #51483c;
   text-align: center;
 }
 .hud-score span {
   font-size: 8px;
   letter-spacing: 1px;
-  color: #b9a7c7;
+  color: #c6b6a1;
   display: block;
 }
 .hud-score strong {
@@ -1214,7 +1214,7 @@ main {
   align-items: center;
   gap: 5px;
   padding: 6px 9px;
-  background: #342330;
+  background: #25241f;
   color: #fce7cf;
   border-radius: 20px;
   letter-spacing: 0.4px;
@@ -1533,7 +1533,7 @@ main {
 }
 .weapon-button.equipped {
   border-color: var(--yellow);
-  background: #ffd55b15;
+  background: #f2ac6915;
   box-shadow: inset 0 0 0 1px var(--yellow);
 }
 .weapon-button .weapon-art {

@@ -6,6 +6,7 @@ import { useGame } from '../core/store';
 import { hitZone, resolveAttack, weaponById, createDeck } from '../engine/game';
 import { audio } from '../engine/audio';
 import { Particles } from '../engine/particles';
+import { choreograph } from '../engine/choreography';
 import { events } from '../core/events';
 import content from '../content/dialogue.json';
 import type { AttackId, ZoneId } from '../../../shared/contracts';
@@ -13,381 +14,246 @@ export interface StageHandle {
   attack: (zone?: ZoneId, roastText?: string) => void;
   cancel: () => void;
 }
-const reactionDeck = createDeck(content.reactions),
-  announcerDeck = createDeck(content.announcer);
+type Input = { x: number; y: number; zone?: ZoneId; roast?: string; id: AttackId; at: number };
+const reactionDeck = createDeck(content.reactions);
+const reaction: Record<AttackId, Expression> = {
+  slap: 'slapped',
+  punch: 'punched',
+  chappal: 'shocked',
+  bonk: 'dazed',
+  tomato: 'splatted',
+  roast: 'roasted',
+  thunder: 'shocked',
+  emotional: 'roasted',
+};
+const recoveryLines: Record<AttackId, string[]> = {
+  slap: [
+    'That was my good side.',
+    'Okay. Message received.',
+    'Five stars. Zero consent from my ego.',
+  ],
+  punch: [
+    'My confidence has a dent.',
+    'That could have been an email.',
+    'I felt that in my LinkedIn.',
+  ],
+  chappal: [
+    'WHO GAVE YOU MOM’S AIM?',
+    'That slipper has a return policy.',
+    'Desi precision. International damage.',
+  ],
+  bonk: ['Rebooting common sense…', 'No thoughts. Just bonk.', 'Have you tried turning me off?'],
+  tomato: [
+    'Organic criticism. Great.',
+    'My skincare routine is ruined.',
+    'This is not farm-to-face.',
+  ],
+  roast: ['I need a minute.', 'Okay. That one was personal.', 'My therapist will hear about this.'],
+  thunder: [
+    'My ancestors felt that.',
+    'I would like to unsubscribe.',
+    'My ego is in another postcode.',
+  ],
+  emotional: ['Sharma ji wins again.', 'My confidence is buffering.', 'That hit the childhood.'],
+};
 export const Stage = forwardRef<StageHandle, { onRoast: () => void }>(({ onRoast }, ref) => {
   const host = useRef<HTMLDivElement>(null),
-    canvas = useRef<HTMLCanvasElement>(null),
-    prop = useRef<HTMLDivElement>(null),
-    text = useRef<HTMLDivElement>(null),
-    tl = useRef<gsap.core.Timeline | null>(null),
-    particles = useRef<Particles | null>(null),
-    buffer = useRef<{ x: number; y: number; at: number; zone?: ZoneId; roastText?: string } | null>(
-      null,
-    ),
-    lastFlash = useRef(0),
-    timer = useRef<ReturnType<typeof setTimeout> | null>(null),
-    activeAttack = useRef<AttackId>('slap'),
-    hitstopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    canvas = useRef<HTMLCanvasElement>(null);
+  const timeline = useRef<gsap.core.Timeline | null>(null),
+    particles = useRef<Particles | null>(null);
+  const pending = useRef<Input | null>(null),
+    finishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pile, setPile] = useState(0),
+    [rain, setRain] = useState(false);
+  const inputTimes = useRef<number[]>([]);
+  const variant = useRef(0),
+    generation = useRef(0);
   const fight = useGame((s) => s.fight),
     settings = useGame((s) => s.settings),
-    weapon = useGame((s) => s.weapon),
     busy = useGame((s) => s.busy);
-  const hold = useRef(false),
-    holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null),
-    inputTimes = useRef<number[]>([]);
-  const [rain, setRain] = useState(false),
-    [pile, setPile] = useState(0);
-  const [expression, setExpression] = useState<Expression>('smug'),
-    [bubble, setBubble] = useState('Go on. I can take it.'),
-    [impact, setImpact] = useState({ word: '', damage: 0, crit: false }),
-    [activeWeapon, setActiveWeapon] = useState<AttackId>('slap');
-  const lastAttack = useRef({ at: 0, id: 'slap' as AttackId, count: 0 });
+  const [expression, setExpression] = useState<Expression>('smug');
+  const [bubble, setBubble] = useState('Go on. Make it personal.');
+  const [active, setActive] = useState<AttackId>('slap');
+  const [quote, setQuote] = useState('');
+  const [impact, setImpact] = useState({ word: '', damage: 0, combo: '', count: 0 });
+  const [decals, setDecals] = useState<{ x: number; y: number; tomato: boolean; angle: number }[]>(
+    [],
+  );
   const cancel = () => {
+    generation.current++;
+    timeline.current?.kill();
+    timeline.current = null;
+    pending.current = null;
+    if (finishTimer.current) clearTimeout(finishTimer.current);
     audio.cancelAttack();
-    tl.current?.kill();
-    tl.current = null;
-    if (timer.current) clearTimeout(timer.current);
-    if (hitstopTimer.current) clearTimeout(hitstopTimer.current);
-    buffer.current = null;
-    hold.current = false;
-    if (holdTimer.current) clearTimeout(holdTimer.current);
     useGame.setState({ busy: false });
-    if (host.current) gsap.killTweensOf(host.current.querySelectorAll('*'));
-  };
-  const attack = (x = 220, y = 178, forcedZone?: ZoneId, submittedRoast?: string) => {
-    const s = useGame.getState(),
-      w = weaponById[s.weapon];
-    if (s.scene !== 'room' || s.fight.ego <= 0) return;
-    if (w.cost > s.fight.rage) {
-      useGame.setState({
-        line: `${w.short} needs ${w.cost}% rage. A few more basics should do it.`,
-      });
-      return;
+    if (host.current) {
+      host.current.dataset.phase = 'idle';
+      delete host.current.dataset.attack;
+      gsap.killTweensOf(host.current.querySelectorAll('*'));
     }
-    if (s.weapon === 'roast' && !submittedRoast?.trim()) {
+  };
+  const attack = (input: Input) => {
+    const s = useGame.getState(),
+      id = input.id;
+    if (s.scene !== 'room' || s.fight.ego <= 0 || weaponById[id].cost > s.fight.rage) return;
+    if (id === 'roast' && !input.roast?.trim()) {
       onRoast();
       return;
     }
     if (s.busy) {
-      buffer.current = { x, y, at: Date.now(), zone: forcedZone, roastText: submittedRoast };
-      if (
-        ['slap', 'tomato'].includes(activeAttack.current) &&
-        ['slap', 'tomato'].includes(s.weapon) &&
-        tl.current &&
-        tl.current.time() > weaponById[activeAttack.current].impact / 1000 + 0.09
-      )
-        tl.current.progress(1);
+      pending.current = input;
       return;
     }
-    const root = host.current;
-    if (!root || !prop.current) return;
-    const id = s.weapon,
-      variant = Math.floor(Math.random() * 3),
-      golden = id === 'chappal' && Math.random() < 0.02,
-      zone = forcedZone || (id === 'emotional' ? 'torso' : hitZone(x, y)),
-      side = x < 220 ? 'left' : 'right',
-      calm = s.settings.motion === 'calm',
-      gentle = s.settings.gentle,
-      p = prop.current,
-      head = root.querySelector('#head'),
-      body = root.querySelector('#harsh-root'),
-      glass = root.querySelector('#glasses'),
-      flash = root.querySelector('.stage-flash'),
-      hitText = text.current;
-    useGame.setState({ busy: true, lastInputAt: Date.now() });
-    setExpression('nervous');
-    setActiveWeapon(id);
-    activeAttack.current = id;
-    gsap.killTweensOf([head, glass]);
-    gsap.set(head, { rotation: 0, scaleX: 1, scaleY: 1 });
-    setImpact({ word: '', damage: 0, crit: false });
-    audio.attackStart(id);
-    const rect = root.getBoundingClientRect(),
-      svg = root.querySelector('.harsh-rig') as SVGSVGElement,
-      point = svg.createSVGPoint();
-    point.x = x;
-    point.y = y;
+    const root = host.current,
+      svg = root?.querySelector('.harsh-rig') as SVGSVGElement | null;
+    if (!root || !svg) return;
+    timeline.current?.kill();
+    const serial = ++generation.current,
+      v = variant.current++ % 3;
+    const zone = input.zone ?? (id === 'emotional' ? 'torso' : hitZone(input.x, input.y));
+    const side = input.x < 220 ? 'left' : 'right';
+    const point = svg.createSVGPoint();
+    point.x = input.x;
+    point.y = input.y;
     const matrix = svg.getScreenCTM(),
-      screen = matrix
-        ? point.matrixTransform(matrix)
-        : { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-    const px = screen.x - rect.left,
-      py = screen.y - rect.top;
-    gsap.set(p, { x: px - 65, y: py - 65, opacity: 0, scale: 0.2, rotation: 0 });
-    gsap.set(hitText, { opacity: 0, scale: 0.2, rotation: 0 });
-    const finish = () => {
-      if (!host.current) return;
-      delete root.dataset.attack;
-      useGame.setState({ busy: false });
-      const f = useGame.getState().fight;
-      setExpression(f.ego <= 0 ? 'ko' : f.ego < 30 ? 'nervous' : 'smug');
-      if (f.ego <= 0) {
-        setBubble('I demand a recount.');
-        audio.win();
-        timer.current = setTimeout(() => useGame.getState().setScene('verdict'), 1100);
-        return;
-      }
-      const b = buffer.current;
-      buffer.current = null;
-      if (b && Date.now() - b.at <= 250)
-        queueMicrotask(() => attack(b.x, b.y, b.zone, b.roastText));
-    };
-    const t = gsap.timeline({ onComplete: finish });
-    tl.current = t;
+      screen = matrix ? point.matrixTransform(matrix) : null;
+    const box = root.getBoundingClientRect();
+    const px = screen ? screen.x - box.left : box.width / 2;
+    const py = screen ? screen.y - box.top : box.height / 2;
+    useGame.setState({ busy: true, lastInputAt: Date.now() });
+    setActive(id);
+    setExpression('nervous');
+    setQuote(
+      id === 'roast'
+        ? input.roast!
+        : id === 'emotional'
+          ? 'Sharma ji ka beta already shipped it.'
+          : '',
+    );
+    setImpact({ word: '', damage: 0, combo: '', count: 0 });
     root.dataset.attack = id;
-    root.dataset.golden = String(golden);
-    if (calm) {
-      t.to(p, { opacity: 1, scale: 0.85, duration: 0.12 }).to(p, { scale: 1, duration: 0.08 });
-    } else if (id === 'chappal' || id === 'tomato') {
-      t.fromTo(
-        p,
-        {
-          x: id === 'chappal' ? -80 : rect.width * 0.3,
-          y: rect.height - 20,
-          scale: 0.4,
-          rotation: -100,
-          opacity: 1,
-        },
-        {
-          x: px - 65,
-          y: py - 180,
-          scale: 1,
-          rotation: id === 'chappal' ? 540 : 80,
-          duration: w.impact / 1600,
-          ease: 'power2.out',
-        },
-      ).to(p, {
-        y: py - 65,
-        rotation: id === 'chappal' ? 780 : 150,
-        duration: w.impact / 2700,
-        ease: 'power2.in',
-      });
-    } else if (id === 'emotional') {
-      setBubble('Sharma ji ka beta got HOW MUCH?');
-      t.to(body, { scale: gentle ? 1 : 1.06, duration: 0.12 }, 0.3)
-        .to(body, { scale: gentle ? 1 : 1.12, duration: 0.12 }, 0.55)
-        .to(body, { scale: gentle ? 1 : 1.18, duration: 0.12 }, 0.8)
-        .to(p, { opacity: 1, scale: 1.25, duration: 0.2 }, 1.1);
-    } else if (id === 'thunder') {
-      t.to(p, { opacity: 1, scale: 0.75, rotation: -12, duration: 0.8 }).to(p, {
-        scale: 2,
-        rotation: 10,
-        duration: 0.2,
-        ease: 'expo.in',
-      });
-    } else {
-      const fromX = id === 'bonk' ? 0 : side === 'left' ? -140 : 140;
-      const fromY = id === 'bonk' ? -170 : 30;
-      t.fromTo(
-        p,
-        {
-          x: px - 65 + fromX,
-          y: py - 65 + fromY,
-          opacity: 1,
-          scale: 0.8,
-          rotation: side === 'left' ? -25 : 25,
-        },
-        { x: px - 65 + fromX * 1.15, y: py - 65 + fromY * 1.1, scale: 0.92, duration: 0.12 },
-      ).to(p, {
-        x: px - 65,
-        y: py - 65,
-        scale: 1.1,
-        rotation: id === 'slap' && variant === 2 ? 360 : 0,
-        duration: 0.08,
-        ease: 'power4.in',
-      });
-    }
-    if (id === 'thunder' && hold.current) {
-      t.call(
-        () => {
-          if (hold.current) {
-            t.pause();
-            holdTimer.current = setTimeout(() => t.resume(), 300);
-          }
-        },
-        undefined,
-        0.9,
-      );
-    }
-    t.call(
-      () => {
-        const current = useGame.getState(),
-          r = resolveAttack(
-            current.fight,
-            id,
-            zone,
-            Date.now(),
-            side,
-            golden ? () => 0 : Math.random,
-          );
-        if (!r) return;
-        if (id === 'chappal' && r.hit) setPile((n) => Math.min(6, n + 1));
+    root.dataset.variant = String(v);
+    audio.cancelAttack();
+    audio.attackStart(id);
+    let landed = false,
+      knockout = false;
+    const t = choreograph({
+      root,
+      id,
+      x: px,
+      y: py,
+      direction: side === 'left' ? -1 : 1,
+      variant: v,
+      calm: s.settings.motion === 'calm',
+      gentle: s.settings.gentle,
+      chain: s.fight.combo,
+      contact: () => {
+        if (serial !== generation.current || landed) return null;
+        landed = true;
+        const current = useGame.getState();
+        const golden = id === 'chappal' && Math.random() < 0.02;
+        const result = resolveAttack(
+          current.fight,
+          id,
+          zone,
+          Date.now(),
+          side,
+          golden ? () => 0 : Math.random,
+        );
+        if (!result) return null;
+        knockout = result.ko;
+        if (id === 'chappal' && result.hit) setPile((n) => Math.min(6, n + 1));
         useGame.setState({
-          fight: r.next,
-          line: r.comboName
-            ? `${r.comboName}! This is going on your permanent record.`
-            : announcerDeck(),
+          fight: result.next,
+          line: result.comboName
+            ? `${result.comboName}. That was a statement.`
+            : recoveryLines[id][v],
+        });
+        setExpression(result.hit ? reaction[id] : 'smug');
+        setBubble(result.hit ? recoveryLines[id][v] : 'You missed. I’m literally standing here.');
+        setImpact({
+          word: result.ko ? 'EGO DELETED.' : result.hit ? weaponById[id].word : 'AIRBALL.',
+          damage: result.damage,
+          combo: result.comboName || (result.next.combo > 1 ? 'KEEP IT GOING' : ''),
+          count: result.next.combo,
         });
         events.emit({
           type: 'attack',
           attack: id,
           zone,
-          damage: r.damage,
-          crit: r.crit,
-          hit: r.hit,
-          comboName: r.comboName,
-          first: r.first,
-          ko: r.ko,
-          roastText: id === 'roast' ? submittedRoast : undefined,
+          damage: result.damage,
+          crit: result.crit,
+          hit: result.hit,
+          comboName: result.comboName,
+          first: result.first,
+          ko: result.ko,
+          roastText: id === 'roast' ? input.roast : undefined,
           occurredAt: new Date().toISOString(),
         });
-        if (!r.hit) {
-          setBubble('…you missed a stationary person.');
-          setImpact({ word: 'WHOOPS.', damage: 0, crit: false });
-          audio.miss();
-        } else {
-          audio.hit(id, r.crit, (x - 220) / 220);
-          if (!calm) {
-            t.pause();
-            particles.current?.pause(true);
-            hitstopTimer.current = setTimeout(
-              () => {
-                if (!document.hidden) {
-                  t.resume();
-                  particles.current?.pause(false);
-                }
-              },
-              r.ko ? 180 : r.crit ? 110 : 65,
+        if (result.hit) {
+          audio.cancelAttack();
+          audio.hit(id, result.crit, (input.x - 220) / 220);
+          if (result.comboName) audio.combo();
+          if (s.settings.motion !== 'calm')
+            particles.current?.burst(
+              px,
+              py,
+              weaponById[id].color,
+              id === 'tomato' ? 28 : id === 'thunder' ? 32 : result.comboName ? 22 : 12,
+              id === 'tomato' ? 'seed' : id === 'bonk' ? 'star' : 'line',
             );
-          }
-          setExpression('hit');
-          setBubble(reactionDeck());
-          setImpact({ word: r.ko ? 'K.O.' : weaponById[id].word, damage: r.damage, crit: r.crit });
-          particles.current?.burst(px, py, w.color, r.ko ? 60 : r.crit ? 32 : 18);
-          if (current.settings.haptics && navigator.vibrate)
-            navigator.vibrate(id === 'thunder' ? 80 : 15);
-          if (!calm) {
-            gsap.fromTo(
-              head,
-              { rotation: 0, scaleX: 1, scaleY: 1 },
+          if (s.settings.haptics && navigator.vibrate)
+            navigator.vibrate(id === 'thunder' ? [20, 25, 35] : 12);
+          if (['tomato', 'slap', 'chappal'].includes(id))
+            setDecals((old) => [
+              ...old.slice(-5),
               {
-                rotation: (side === 'left' ? 1 : -1) * (14 + variant * 7),
-                scaleX: id === 'bonk' ? 0.9 : 1.12 + variant * 0.06,
-                scaleY: id === 'bonk' ? 0.7 : 0.85,
-                duration: 0.06,
-                transformOrigin: '50% 80%',
-                onComplete: () => {
-                  gsap.to(head, {
-                    rotation: 0,
-                    scaleX: 1,
-                    scaleY: 1,
-                    duration: 0.42,
-                    ease: 'elastic.out(1,.35)',
-                  });
-                },
+                x: Math.max(150, Math.min(295, input.x)),
+                y: Math.max(150, Math.min(260, input.y)),
+                tomato: id === 'tomato',
+                angle: v * 24 - 24,
               },
-            );
-            if (id === 'punch' && y > 200 && !r.ko)
-              gsap.to(body, { y: -45, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out' });
-            if (zone === 'glasses')
-              gsap.fromTo(
-                glass,
-                { y: 0, rotation: 0 },
-                {
-                  y: -30,
-                  rotation: side === 'left' ? 20 : -20,
-                  duration: 0.2,
-                  yoyo: true,
-                  repeat: 1,
-                },
-              );
-            gsap.fromTo(
-              root.querySelector('.rig-wrap'),
-              { x: 0 },
-              {
-                x: side === 'left' ? 8 : -8,
-                duration: 0.04,
-                yoyo: true,
-                repeat: 3,
-                clearProps: 'x',
-              },
-            );
-          }
-          if (
-            !calm &&
-            !current.settings.gentle &&
-            ['punch', 'thunder'].includes(id) &&
-            Date.now() - lastFlash.current > 750
-          ) {
-            lastFlash.current = Date.now();
-            gsap.fromTo(flash, { opacity: 0.65 }, { opacity: 0, duration: 0.15 });
-          }
-          const svgLayer = root.querySelector('#decal-layer');
-          if (svgLayer && ['slap', 'tomato', 'chappal'].includes(id)) {
-            const decal = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            decal.setAttribute(
-              'transform',
-              `translate(${Math.max(136, Math.min(304, x))} ${Math.max(120, Math.min(380, y))}) rotate(${Math.random() * 60 - 30})`,
-            );
-            decal.setAttribute('opacity', '.7');
-            if (id === 'tomato') {
-              decal.innerHTML =
-                '<path d="M-21-7Q-32-27-8-20L0-31 10-19Q39-21 24-4L32 9 14 16 7 32-5 18-28 22-21 5Z" fill="#df4c43" stroke="none"/><path d="M0 10v28" stroke="#df4c43" stroke-width="5" stroke-linecap="round"/>';
-            } else {
-              decal.innerHTML =
-                '<ellipse rx="17" ry="13" fill="#e77d77" stroke="none"/><path d="m-12-3-4-18m12 14-2-22m10 22 2-20m5 21 5-16" stroke="#e77d77" stroke-width="5"/>';
-            }
-            svgLayer.appendChild(decal);
-            while (svgLayer.children.length > (current.settings.lite ? 6 : 12))
-              svgLayer.firstElementChild?.remove();
-          }
-          if (r.ko && !calm)
-            gsap.to(body, {
-              rotation: -75,
-              y: 90,
-              x: -30,
-              duration: 0.65,
-              ease: 'bounce.out',
-              transformOrigin: '50% 90%',
-            });
-        }
-        gsap.fromTo(
-          hitText,
-          { opacity: 0, scale: 1.8, rotation: -9 },
-          { opacity: 1, scale: 1, rotation: -5, duration: calm ? 0.12 : 0.18, ease: 'back.out(2)' },
-        );
-        if (r.comboName) audio.combo();
-        const last = lastAttack.current;
-        lastAttack.current = {
-          at: Date.now(),
-          id,
-          count: last.id === id && Date.now() - last.at < 1500 ? last.count + 1 : 1,
-        };
+            ]);
+        } else audio.miss();
+        return { hit: result.hit, ko: result.ko, crit: result.crit, combo: result.next.combo };
       },
-      undefined,
-      calm ? 0.2 : w.impact / 1000,
-    );
-    t.to(
-      p,
-      { opacity: 0, scale: id === 'chappal' ? 0.8 : 1.3, y: py + 40, duration: 0.24 },
-      calm ? 0.28 : w.impact / 1000 + 0.1,
-    );
-    t.to(
-      hitText,
-      { opacity: 0, scale: 0.95, duration: 0.2 },
-      calm ? 0.68 : Math.max(0.65, w.duration / 1000 - 0.2),
-    );
-    if (id === 'emotional') t.to(body, { scale: 1, duration: 0.35 }, 2.8);
-    if (id === 'thunder' && !calm)
-      t.to(body, { y: -120, rotation: 8, duration: 0.35, ease: 'power3.out' }, 1.2).to(
-        body,
-        { y: 0, rotation: 0, duration: 0.5, ease: 'bounce.out' },
-        1.65,
-      );
+      recovery: () => {
+        if (!knockout)
+          setExpression(
+            id === 'bonk' ? 'dazed' : id === 'roast' || id === 'emotional' ? 'roasted' : 'nervous',
+          );
+      },
+      complete: () => {
+        if (serial !== generation.current) return;
+        root.dataset.phase = 'idle';
+        delete root.dataset.attack;
+        useGame.setState({ busy: false });
+        setExpression(knockout ? 'ko' : useGame.getState().fight.ego < 30 ? 'nervous' : 'smug');
+        if (knockout) {
+          audio.win();
+          setBubble('Fine. You win. Tell nobody.');
+          finishTimer.current = setTimeout(() => useGame.getState().setScene('verdict'), 1100);
+          return;
+        }
+        const next = pending.current;
+        pending.current = null;
+        if (next && Date.now() - next.at < 450) queueMicrotask(() => attack(next));
+      },
+    });
+    timeline.current = t;
+    t.play(0);
   };
   useImperativeHandle(ref, () => ({
-    attack: (zone, roastText) => attack(220, 178, zone || 'glasses', roastText),
+    attack: (zone, roastText) =>
+      attack({
+        x: 220,
+        y: 178,
+        zone: zone || 'glasses',
+        roast: roastText,
+        id: useGame.getState().weapon,
+        at: Date.now(),
+      }),
     cancel,
   }));
   useEffect(() => {
@@ -403,41 +269,23 @@ export const Stage = forwardRef<StageHandle, { onRoast: () => void }>(({ onRoast
     const visibility = () => {
       p.pause(document.hidden);
       if (document.hidden) {
-        tl.current?.pause();
+        timeline.current?.pause();
         audio.suspend();
       } else {
-        tl.current?.resume();
+        timeline.current?.resume();
         audio.resume();
         useGame.setState({ lastInputAt: Date.now() });
       }
     };
     document.addEventListener('visibilitychange', visibility);
     const idle = setInterval(() => {
-      const s = useGame.getState();
-      if (s.busy || s.fight.ego <= 0 || document.hidden) return;
-      const elapsed = Date.now() - s.lastInputAt;
-      if (elapsed > 15000 && !s.fight.asleep) {
-        useGame.setState({ fight: { ...s.fight, asleep: true } });
+      const state = useGame.getState();
+      if (state.busy || state.fight.ego <= 0 || document.hidden) return;
+      if (Date.now() - state.lastInputAt > 15000) {
         setExpression('asleep');
-        setBubble('Zzz… wake me when you’re interesting.');
-      } else if (elapsed > 8000 && !s.fight.asleep) {
-        setBubble('So… are we doing this or what?');
-      } else if (s.settings.motion !== 'calm' && host.current) {
-        const rig = host.current;
-        gsap.to(rig.querySelector('#head'), {
-          rotation: (Math.random() - 0.5) * 5,
-          duration: 0.5,
-          yoyo: true,
-          repeat: 1,
-        });
-        gsap.to(rig.querySelectorAll('.pupil'), {
-          x: (Math.random() - 0.5) * 6,
-          duration: 0.4,
-          yoyo: true,
-          repeat: 1,
-        });
-      }
-    }, 1500);
+        setBubble('Wake me when you’re interesting.');
+      } else if (Date.now() - state.lastInputAt > 8000) setBubble(reactionDeck());
+    }, 4000);
     return () => {
       cancel();
       p.destroy();
@@ -451,51 +299,90 @@ export const Stage = forwardRef<StageHandle, { onRoast: () => void }>(({ onRoast
       ref={host}
       className={`stage ${settings.motion === 'calm' ? 'stage-calm' : ''}`}
       data-testid="stage"
+      data-phase="idle"
       aria-busy={busy}
-      onPointerUp={() => {
-        hold.current = false;
-        if (holdTimer.current) clearTimeout(holdTimer.current);
-        tl.current?.resume();
-      }}
-      onPointerCancel={() => {
-        hold.current = false;
-        tl.current?.resume();
+      onPointerMove={(e) => {
+        if (e.pointerType !== 'mouse' || busy || settings.motion === 'calm') return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        gsap.to(e.currentTarget.querySelectorAll('.pupil'), {
+          x: ((e.clientX - rect.left - rect.width / 2) / rect.width) * 8,
+          y: ((e.clientY - rect.top - rect.height / 2) / rect.height) * 5,
+          duration: 0.18,
+          overwrite: true,
+        });
       }}
       onPointerDown={(e) => {
-        if (e.button !== 0) return;
-        hold.current = true;
-        e.currentTarget.setPointerCapture(e.pointerId);
+        if (e.button !== 0 || (e.target as HTMLElement).closest('.roast-lettering')) return;
         const now = Date.now();
         inputTimes.current = [...inputTimes.current.filter((t) => now - t < 1000), now];
-        if (useGame.getState().weapon === 'tomato' && inputTimes.current.length >= 3) {
+        if (
+          useGame.getState().weapon === 'tomato' &&
+          inputTimes.current.length >= 3 &&
+          settings.motion !== 'calm'
+        ) {
           setRain(true);
           inputTimes.current = [];
         }
-        const svg = host.current?.querySelector('.harsh-rig') as SVGSVGElement | undefined;
-        if (!svg) return;
-        const m = svg.getScreenCTM();
-        if (!m) return;
+        const svg = host.current?.querySelector('.harsh-rig') as SVGSVGElement | null;
+        const matrix = svg?.getScreenCTM();
+        if (!svg || !matrix) return;
         const point = svg.createSVGPoint();
         point.x = e.clientX;
         point.y = e.clientY;
-        const local = point.matrixTransform(m.inverse());
-        attack(local.x, local.y);
+        const local = point.matrixTransform(matrix.inverse());
+        attack({ x: local.x, y: local.y, id: useGame.getState().weapon, at: Date.now() });
       }}
     >
       <div className="stage-topline">
-        <span>THE EGO HAS LANDED</span>
+        <span>ROOM 001 / EGO DISPOSAL</span>
         <span className="live-pill">
-          <i /> LIVE & VERY PERSONAL
+          <i /> {busy ? 'INCIDENT IN PROGRESS' : 'READY WHEN YOU ARE'}
         </span>
       </div>
-      <div className="arena-word" aria-hidden="true">
-        LET IT OUT.
-      </div>
-      <div className="stage-rays" />
-      <div className="floor-lines" />
-      <div className="speech-bubble">{bubble}</div>
-      <div className="rig-wrap">
-        <HarshRig expression={expression} ego={fight.ego} />
+      <div className="stage-camera">
+        <div className="room-wall" aria-hidden="true">
+          <span>NO HARD FEELINGS.</span>
+        </div>
+        <div className="room-light light-left" />
+        <div className="room-light light-right" />
+        <div className="arena-word" aria-hidden="true">
+          HARSH
+        </div>
+        <div className="floor-lines" />
+        <div className="rig-wrap">
+          <HarshRig expression={expression} ego={fight.ego} />
+          <svg className="decal-overlay" viewBox="0 0 440 520" aria-hidden="true">
+            {decals.map((decal, i) => (
+              <g
+                key={i}
+                transform={`translate(${decal.x} ${decal.y}) rotate(${decal.angle})`}
+                opacity=".65"
+              >
+                {decal.tomato ? (
+                  <>
+                    <path
+                      d="m-24-5-9-17 24 7L0-30l9 18 25-6-13 20 13 12-25 1-8 19-9-19-24 8Z"
+                      fill="#de432a"
+                    />
+                    <path d="M2 8v34" stroke="#de432a" strokeWidth="5" strokeLinecap="round" />
+                  </>
+                ) : (
+                  <ellipse rx="17" ry="11" fill="#d57050" />
+                )}
+              </g>
+            ))}
+          </svg>
+        </div>
+        <div className="orbit-stars" aria-hidden="true">
+          <span>✦</span>
+          <span>✧</span>
+          <span>✦</span>
+        </div>
+        <div className="speech-bubble">“{bubble}”</div>
+        <div className="target-tag">
+          <span className="target-dot" /> HARSH{' '}
+          <small>{fight.ego > 50 ? 'STILL THINKS HE’S RIGHT' : 'RECONSIDERING EVERYTHING'}</small>
+        </div>
       </div>
       <div className="chappal-pile" aria-hidden="true">
         {Array.from({ length: pile }, (_, i) => (
@@ -511,64 +398,46 @@ export const Stage = forwardRef<StageHandle, { onRoast: () => void }>(({ onRoast
       </div>
       {rain && (
         <div className="tomato-rain" onAnimationEnd={() => setRain(false)} aria-hidden="true">
-          {Array.from({ length: settings.lite ? 4 : 12 }, (_, i) => (
-            <div key={i} style={{ left: `${i * 8}%`, animationDelay: `${i * 0.06}s` }}>
+          {Array.from({ length: settings.lite ? 4 : 8 }, (_, i) => (
+            <div key={i} style={{ left: `${i * 13}%`, animationDelay: `${i * 0.06}s` }}>
               <WeaponArt id="tomato" />
             </div>
           ))}
         </div>
       )}
-      <div className="emotional-prop" aria-hidden="true">
-        <span>SHARMA JI’S BETA</span>
-        <strong>9.9</strong>
-        <small>FICTIONAL EGO SCORE</small>
-      </div>
-      <div className="soul-prop" aria-hidden="true">
-        <svg viewBox="0 0 80 90">
-          <path
-            d="M12 75V38q0-32 28-32t28 32v37L57 65 46 79 34 66 23 79Z"
-            fill="#f4eee3"
-            fillOpacity=".8"
-            stroke="#45304f"
-            strokeWidth="3"
-          />
-          <ellipse cx="30" cy="36" rx="5" ry="8" fill="#45304f" />
-          <ellipse cx="51" cy="36" rx="5" ry="8" fill="#45304f" />
-          <ellipse cx="40" cy="55" rx="7" ry="8" fill="#45304f" />
-        </svg>
-      </div>
-      <svg className="thunder-bolt" viewBox="0 0 100 200" aria-hidden="true">
-        <path
-          d="M63 0 16 88h39L28 200 91 72H59L82 0"
-          fill="#e8ffa1"
-          stroke="#382341"
-          strokeWidth="3"
-        />
+      <div className="impact-light" />
+      <svg className={`impact-graphic graphic-${active}`} viewBox="0 0 220 220" aria-hidden="true">
+        <path d="m110 5 13 67 52-43-30 61 69 4-63 28 46 46-65-21-15 69-17-64-58 39 30-60-68-14 68-12-39-57 57 33Z" />
+        <circle cx="110" cy="110" r="62" />
       </svg>
-      <div className="target-tag">
-        <span className="target-dot" /> HARSH <small>SELF-PROCLAIMED NICE GUY</small>
+      <div className="attack-prop" aria-hidden="true">
+        <WeaponArt id={active} />
       </div>
-      <div className="attack-prop" ref={prop}>
-        <WeaponArt id={activeWeapon} />
+      <div
+        className={`roast-lettering ${quote ? 'has-quote' : ''}`}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <span>
+          {active === 'emotional' ? 'UNSOLICITED COMPARISON' : 'YOUR WORDS. HIS PROBLEM.'}
+        </span>
+        <p>{quote}</p>
       </div>
-      <div className={`impact-word ${impact.crit ? 'critical' : ''}`} ref={text}>
-        <small>
-          {impact.crit
-            ? '★ CRITICAL HIT ★'
-            : impact.damage
-              ? `−${impact.damage} EGO`
-              : 'A FOR EFFORT'}
-        </small>
+      <div className="impact-text" aria-hidden="true">
         <strong>{impact.word}</strong>
+        {impact.damage > 0 && (
+          <span>
+            −{impact.damage} EGO {impact.count > 1 ? `/ ×${impact.count}` : ''}
+          </span>
+        )}
       </div>
-      <div className="stage-flash" />
+      {impact.combo && (
+        <div className="chain-callout" key={`${fight.attacks}-combo`}>
+          <b>×{impact.count}</b>
+          <span>{impact.combo}</span>
+        </div>
+      )}
       <canvas ref={canvas} className="particle-canvas" aria-hidden="true" />
-      <div className="stage-help">
-        <span className="aim-mark">＋</span>{' '}
-        {weaponById[weapon].cost
-          ? 'Tap to unleash. Brace for drama.'
-          : 'Tap Harsh to hit. Aim for the glasses.'}
-      </div>
+      <div className="stage-instruction">PICK A MOVE. TAP HARSH TO AIM.</div>
     </div>
   );
 });

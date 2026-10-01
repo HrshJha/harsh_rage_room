@@ -24,7 +24,7 @@ export const weapons: Weapon[] = [
     word: 'WHAP!',
     description: 'Five fingers. One opinion.',
     impact: 200,
-    duration: 650,
+    duration: 950,
   },
   {
     id: 'punch',
@@ -36,8 +36,8 @@ export const weapons: Weapon[] = [
     color: '#ff755c',
     word: 'POW!',
     description: 'A very direct message.',
-    impact: 190,
-    duration: 700,
+    impact: 320,
+    duration: 1100,
   },
   {
     id: 'chappal',
@@ -46,10 +46,10 @@ export const weapons: Weapon[] = [
     damage: [8, 11],
     gain: 8,
     cost: 0,
-    color: '#bc9bff',
+    color: '#eaa45e',
     word: 'THWACK!',
     description: 'Mom-approved accuracy.',
-    impact: 520,
+    impact: 440,
     duration: 1100,
   },
   {
@@ -62,8 +62,8 @@ export const weapons: Weapon[] = [
     color: '#ffd55b',
     word: 'BONK!',
     description: 'Have you tried restarting him?',
-    impact: 240,
-    duration: 700,
+    impact: 380,
+    duration: 1100,
   },
   {
     id: 'tomato',
@@ -75,8 +75,8 @@ export const weapons: Weapon[] = [
     color: '#ff755c',
     word: 'SPLAT!',
     description: 'Fresh. Organic. Personal.',
-    impact: 420,
-    duration: 850,
+    impact: 360,
+    duration: 950,
   },
   {
     id: 'roast',
@@ -85,11 +85,11 @@ export const weapons: Weapon[] = [
     damage: [10, 14],
     gain: 10,
     cost: 0,
-    color: '#bc9bff',
+    color: '#eaa45e',
     word: 'ROASTED!',
     description: 'Words leave a different mark.',
-    impact: 600,
-    duration: 1050,
+    impact: 650,
+    duration: 2400,
   },
   {
     id: 'thunder',
@@ -98,11 +98,11 @@ export const weapons: Weapon[] = [
     damage: [28, 35],
     gain: 0,
     cost: 100,
-    color: '#b6ff63',
+    color: '#ffd19a',
     word: 'KABOOM!',
     description: '100 rage. Zero chill.',
-    impact: 1050,
-    duration: 2600,
+    impact: 640,
+    duration: 1600,
   },
   {
     id: 'emotional',
@@ -111,11 +111,11 @@ export const weapons: Weapon[] = [
     damage: [20, 25],
     gain: 0,
     cost: 60,
-    color: '#ff91bf',
+    color: '#e8ac80',
     word: 'EMOTIONAL DAMAGE',
     description: 'Sharma ji ka beta enters the chat.',
-    impact: 1500,
-    duration: 3200,
+    impact: 850,
+    duration: 1800,
   },
 ];
 export const weaponById = Object.fromEntries(weapons.map((w) => [w.id, w])) as Record<
@@ -178,6 +178,8 @@ export function comboName(history: Hit[], sleeping = false): string | null {
   if (sleeping) return 'SLEEPING BEAUTY';
   const ids = history.map((h) => h.id),
     tail = (n: number) => ids.slice(-n).join(',');
+  if (tail(3) === 'slap,punch,bonk') return 'COMIC RELIEF';
+  if (tail(3) === 'chappal,slap,thunder') return 'MONSOON SPECIAL';
   if (tail(3) === 'chappal,slap,emotional') return 'DESI MOM SPECIAL';
   if (new Set(ids.filter((id) => !weaponById[id].cost)).size === 6) return 'FULL SET';
   if (tail(5) === 'bonk,bonk,bonk,bonk,bonk') return 'BONK-A-DOODLE';
