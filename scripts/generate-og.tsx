@@ -1,0 +1,8 @@
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import sharp from 'sharp';
+import {HarshRig} from '../web/src/components/HarshRig';
+const rig=renderToStaticMarkup(<HarshRig/>).replace('<svg ', '<svg x="715" y="70" width="430" height="510" ');
+const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><defs><pattern id="dots" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".7" fill="#8e719e" opacity=".2"/></pattern></defs><rect width="1200" height="630" fill="#171321"/><rect width="1200" height="630" fill="url(#dots)"/><circle cx="925" cy="315" r="222" fill="#cf845e"/><circle cx="925" cy="315" r="236" fill="none" stroke="#cf845e" stroke-dasharray="4 7" opacity=".4"/><text x="65" y="78" font-family="Arial,sans-serif" font-size="17" font-weight="bold" letter-spacing="3" fill="#f5eddf">HARSH RAGE ROOM / VOL. 01</text><g font-family="Impact,Arial Black,sans-serif" font-size="96" font-weight="900"><text x="60" y="220" fill="#f5eddf">IS HARSH</text><text x="60" y="325" fill="#ffd55b">IRRITATING</text><text x="60" y="430" fill="#f5eddf">YOU?</text></g><path d="M64 345Q360 332 636 347" stroke="#ffd55b" stroke-width="4" fill="none"/><text x="66" y="499" font-family="Arial,sans-serif" font-size="21" fill="#c8bcd0">A highly unnecessary solution.</text><rect x="64" y="535" width="470" height="44" rx="5" fill="#ffd55b"/><text x="90" y="564" font-family="Arial,sans-serif" font-size="15" font-weight="bold" letter-spacing="1" fill="#171321">8 WEAPONS. ONE EGO. LET IT OUT.</text>${rig}</svg>`;
+await sharp(Buffer.from(svg)).png().toFile('web/public/og.png');
+console.log('Generated original 1200×630 share preview.');

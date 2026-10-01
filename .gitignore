@@ -1,0 +1,16 @@
+node_modules/
+audio-source/
+web/dist/
+api/dist/
+.env
+.env.*
+!.env.example
+!web/.env.example
+.wrangler/
+.vercel/
+coverage/
+playwright-report/
+test-results/
+.lighthouseci/
+*.log
+.DS_Store

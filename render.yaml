@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: harsh-rage-room-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci --include=dev && npm run build:api
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24.14.1
+      - key: NODE_ENV
+        value: production
+      - key: NOTIFY_ENABLED
+        value: "true"
+      - key: NOTIFY_DRY_RUN
+        value: "true"
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: SESSION_HMAC_SECRET
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          name: harsh-rage-room-limits
+          type: keyvalue
+          property: connectionString
+  - type: keyvalue
+    name: harsh-rage-room-limits
+    plan: free
+    region: singapore
+    ipAllowList: []
+    maxmemoryPolicy: noeviction

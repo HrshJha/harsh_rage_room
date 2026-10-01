@@ -1,0 +1,6 @@
+import {spawn} from 'node:child_process';
+import {mkdir,writeFile} from 'node:fs/promises';
+import lighthouse from 'lighthouse';
+import {launch} from 'chrome-launcher';
+import {chromium} from '@playwright/test';
+const server=spawn('npm',['run','preview','--','--port','4178'],{stdio:'ignore'});let chrome;try{for(let i=0;i<40;i++){try{if((await fetch('http://localhost:4178')).ok)break}catch{/* Preview server is still starting. */}await new Promise(r=>setTimeout(r,250))}chrome=await launch({chromePath:chromium.executablePath(),chromeFlags:['--headless','--no-sandbox']});const result=await lighthouse('http://localhost:4178',{port:chrome.port,output:['html','json'],onlyCategories:['performance','accessibility'],logLevel:'error'});await mkdir('.lighthouseci',{recursive:true});await writeFile('.lighthouseci/report.html',result.report[0]);await writeFile('.lighthouseci/report.json',result.report[1]);const a=result.lhr.audits;const metrics={performance:result.lhr.categories.performance.score,accessibility:result.lhr.categories.accessibility.score,lcp:a['largest-contentful-paint'].numericValue,tbt:a['total-blocking-time'].numericValue,cls:a['cumulative-layout-shift'].numericValue};console.log(JSON.stringify(metrics,null,2));if(metrics.lcp>=2000||metrics.tbt>=200||metrics.cls>=.05)process.exitCode=1}finally{await chrome?.kill();server.kill('SIGTERM')}

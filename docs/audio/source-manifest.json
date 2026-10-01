@@ -1,0 +1,237 @@
+{
+  "verified_on": "2026-10-01",
+  "sources": [
+    {
+      "name": "slap",
+      "author": "oscaraudiogeek",
+      "source_url": "https://freesound.org/people/oscaraudiogeek/sounds/333516/",
+      "preview_url": "https://cdn.freesound.org/previews/333/333516_5117035-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 333516,
+      "bytes": 541440
+    },
+    {
+      "name": "punch",
+      "author": "aidansamuel",
+      "source_url": "https://freesound.org/people/aidansamuel/sounds/540131/",
+      "preview_url": "https://cdn.freesound.org/previews/540/540131_10965608-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 540131,
+      "bytes": 104496
+    },
+    {
+      "name": "chappal",
+      "author": "Jepplet",
+      "source_url": "https://freesound.org/people/Jepplet/sounds/476622/",
+      "preview_url": "https://cdn.freesound.org/previews/476/476622_1378191-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 476622,
+      "bytes": 1573584
+    },
+    {
+      "name": "chappal_texture",
+      "author": "Artem_Zaitsev",
+      "source_url": "https://freesound.org/people/Artem_Zaitsev/sounds/835154/",
+      "preview_url": "https://cdn.freesound.org/previews/835/835154_15618458-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 835154,
+      "bytes": 829800
+    },
+    {
+      "name": "bonk",
+      "author": "CuboRodante",
+      "source_url": "https://freesound.org/people/CuboRodante/sounds/812363/",
+      "preview_url": "https://cdn.freesound.org/previews/812/812363_17517436-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 812363,
+      "bytes": 27936
+    },
+    {
+      "name": "bonk2",
+      "author": "facklere",
+      "source_url": "https://freesound.org/people/facklere/sounds/458572/",
+      "preview_url": "https://cdn.freesound.org/previews/458/458572_9571654-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 458572,
+      "bytes": 17327
+    },
+    {
+      "name": "bonk3",
+      "author": "Sadiquecat",
+      "source_url": "https://freesound.org/people/Sadiquecat/sounds/742277/",
+      "preview_url": "https://cdn.freesound.org/previews/742/742277_5287430-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 742277,
+      "bytes": 30369
+    },
+    {
+      "name": "tomato",
+      "author": "kaydinhamby",
+      "source_url": "https://freesound.org/people/kaydinhamby/sounds/382637/",
+      "preview_url": "https://cdn.freesound.org/previews/382/382637_6478384-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 382637,
+      "bytes": 40762
+    },
+    {
+      "name": "tomato2",
+      "author": "zolopher",
+      "source_url": "https://freesound.org/people/zolopher/sounds/44203/",
+      "preview_url": "https://cdn.freesound.org/previews/44/44203_482913-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 44203,
+      "bytes": 156008
+    },
+    {
+      "name": "tomato3",
+      "author": "HonorHunter",
+      "source_url": "https://freesound.org/people/HonorHunter/sounds/271666/",
+      "preview_url": "https://cdn.freesound.org/previews/271/271666_5158123-hq.mp3",
+      "license": "CC0 1.0",
+      "source_id": 271666,
+      "bytes": 27120
+    }
+  ],
+  "clips": [
+    {
+      "file": "slap/contact-01.mp3",
+      "source": "slap",
+      "peak_seconds": 0.6,
+      "tail_seconds": 0.28,
+      "lowpass_hz": 7500
+    },
+    {
+      "file": "slap/contact-02.mp3",
+      "source": "slap",
+      "peak_seconds": 2.07,
+      "tail_seconds": 0.28,
+      "lowpass_hz": 7500
+    },
+    {
+      "file": "slap/contact-03.mp3",
+      "source": "slap",
+      "peak_seconds": 3.66,
+      "tail_seconds": 0.28,
+      "lowpass_hz": 7500
+    },
+    {
+      "file": "slap/contact-04.mp3",
+      "source": "slap",
+      "peak_seconds": 9.45,
+      "tail_seconds": 0.28,
+      "lowpass_hz": 7500
+    },
+    {
+      "file": "punch/contact-01.mp3",
+      "source": "punch",
+      "peak_seconds": 0.59,
+      "tail_seconds": 0.36,
+      "lowpass_hz": 7000
+    },
+    {
+      "file": "punch/contact-02.mp3",
+      "source": "punch",
+      "peak_seconds": 1.71,
+      "tail_seconds": 0.36,
+      "lowpass_hz": 7000
+    },
+    {
+      "file": "punch/contact-03.mp3",
+      "source": "punch",
+      "peak_seconds": 2.15,
+      "tail_seconds": 0.36,
+      "lowpass_hz": 7000
+    },
+    {
+      "file": "punch/contact-04.mp3",
+      "source": "punch",
+      "peak_seconds": 2.54,
+      "tail_seconds": 0.36,
+      "lowpass_hz": 7000
+    },
+    {
+      "file": "chappal/contact-01.mp3",
+      "source": "chappal",
+      "peak_seconds": 43.41,
+      "tail_seconds": 0.32,
+      "lowpass_hz": 4500
+    },
+    {
+      "file": "chappal/contact-02.mp3",
+      "source": "chappal",
+      "peak_seconds": 62.96,
+      "tail_seconds": 0.32,
+      "lowpass_hz": 4500
+    },
+    {
+      "file": "chappal/contact-03.mp3",
+      "source": "chappal",
+      "peak_seconds": 69.37,
+      "tail_seconds": 0.32,
+      "lowpass_hz": 4500
+    },
+    {
+      "file": "chappal/contact-04.mp3",
+      "source": "chappal",
+      "peak_seconds": 71.85,
+      "tail_seconds": 0.32,
+      "lowpass_hz": 4500
+    },
+    {
+      "file": "bonk/contact-01.mp3",
+      "source": "bonk",
+      "peak_seconds": 0.38,
+      "tail_seconds": 0.38,
+      "lowpass_hz": 6500
+    },
+    {
+      "file": "bonk/contact-02.mp3",
+      "source": "bonk2",
+      "peak_seconds": 0.01,
+      "tail_seconds": 0.43,
+      "lowpass_hz": 7000
+    },
+    {
+      "file": "bonk/contact-03.mp3",
+      "source": "bonk3",
+      "peak_seconds": 0.01,
+      "tail_seconds": 0.4,
+      "lowpass_hz": 6500
+    },
+    {
+      "file": "tomato/contact-01.mp3",
+      "source": "tomato",
+      "peak_seconds": 0.23,
+      "tail_seconds": 0.34,
+      "lowpass_hz": 7000
+    },
+    {
+      "file": "tomato/contact-02.mp3",
+      "source": "tomato3",
+      "peak_seconds": 0.09,
+      "tail_seconds": 0.36,
+      "lowpass_hz": 7000
+    },
+    {
+      "file": "tomato/contact-03.mp3",
+      "source": "tomato2",
+      "peak_seconds": 1.84,
+      "tail_seconds": 0.3,
+      "lowpass_hz": 6500
+    },
+    {
+      "file": "chappal/rubber.mp3",
+      "source": "chappal_texture",
+      "peak_seconds": 0.62,
+      "tail_seconds": 0.22,
+      "lowpass_hz": 5200
+    },
+    {
+      "file": "tomato/droplets.mp3",
+      "source": "tomato2",
+      "peak_seconds": 4.38,
+      "tail_seconds": 0.2,
+      "lowpass_hz": 7200
+    }
+  ]
+}
