@@ -9,7 +9,10 @@ const config: Config = {
   enabled: process.env.NOTIFY_ENABLED !== 'false',
   dryRun,
   production,
-  origins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5178,http://127.0.0.1:5178')
+  origins: (
+    process.env.ALLOWED_ORIGINS ||
+    'https://harsh-rage-room.vercel.app,http://localhost:5178,http://127.0.0.1:5178'
+  )
     .split(',')
     .map((x) => x.trim()),
   botToken: process.env.TELEGRAM_BOT_TOKEN || '',
