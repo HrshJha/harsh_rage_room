@@ -1,7 +1,10 @@
 import { events } from '../core/events';
 import { useGame, reportStats } from '../core/store';
 import { angerKeys, type NotifyEvent } from '../../../shared/contracts';
-const base = (import.meta.env?.VITE_API_BASE || '').replace(/\/$/, '');
+const base = (import.meta.env?.VITE_API_BASE || 'https://harsh-rage-room.onrender.com').replace(
+  /\/$/,
+  '',
+);
 type Pending = { event: NotifyEvent; attempts: number; expires: number };
 const sessions = new Map<string, ReportSession>();
 function persist() {
