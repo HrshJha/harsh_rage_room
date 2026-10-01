@@ -50,6 +50,7 @@ export function createApp(
   app.get('/api/health', (c) =>
     c.json({ ok: true, notify: config.enabled, mode: config.dryRun ? 'dry-run' : 'live' }),
   );
+  app.get('/', (c) => c.redirect('https://harsh-rage-room.vercel.app/'));
   app.post('/api/session', async (c) => {
     const input = z.object({}).strict().safeParse(await c.req.json().catch(() => null));
     if (!input.success) return c.json({ error: 'bad_request' }, 400);
