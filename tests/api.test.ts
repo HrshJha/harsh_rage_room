@@ -10,7 +10,6 @@ const config: Config = {
   enabled: true,
   dryRun: true,
   origins: ['http://localhost:5178'],
-  captchaSecret: '',
   production: false,
   botToken: 'fake',
   chatId: 'test',
@@ -182,32 +181,6 @@ describe('API contracts', () => {
     const app = createApp({ ...config, enabled: false });
     expect((await app.request('/api/health')).status).toBe(200);
     expect((await post(app, '/api/notify', event())).status).toBe(503);
-  });
-  it('rejects a failed captcha', async () => {
-    const fetcher = vi.fn(
-      async () => new Response(JSON.stringify({ success: false })),
-    ) as unknown as typeof fetch;
-    const app = createApp(
-      { ...config, dryRun: false, captchaSecret: 'fake' },
-      new MemoryCoordinator(),
-      undefined,
-      fetcher,
-    );
-    expect((await post(app, '/api/session', { captchaToken: 'invalid' })).status).toBe(403);
-  });
-  it('fails open only twice on a captcha provider outage', async () => {
-    const fetcher = vi.fn(async () => {
-      throw new Error('offline');
-    }) as unknown as typeof fetch;
-    const app = createApp(
-      { ...config, dryRun: false, captchaSecret: 'fake' },
-      new MemoryCoordinator(),
-      undefined,
-      fetcher,
-    );
-    expect((await post(app, '/api/session', { captchaToken: 'fake' })).status).toBe(200);
-    expect((await post(app, '/api/session', { captchaToken: 'fake' })).status).toBe(200);
-    expect((await post(app, '/api/session', { captchaToken: 'fake' })).status).toBe(429);
   });
 });
 describe('coordinator', () => {

@@ -12,7 +12,6 @@ export interface Config {
   enabled: boolean;
   dryRun: boolean;
   origins: string[];
-  captchaSecret: string;
   production: boolean;
   botToken: string;
   chatId: string;
@@ -22,7 +21,6 @@ export function createApp(
   config: Config,
   coordinator: Coordinator = new MemoryCoordinator(),
   telegram = new Telegram(config.botToken, config.chatId),
-  fetcher: typeof fetch = fetch,
 ) {
   const app = new Hono();
   app.use('*', secureHeaders());
@@ -53,10 +51,7 @@ export function createApp(
     c.json({ ok: true, notify: config.enabled, mode: config.dryRun ? 'dry-run' : 'live' }),
   );
   app.post('/api/session', async (c) => {
-    const input = z
-      .object({ captchaToken: z.string().max(4096).optional() })
-      .strict()
-      .safeParse(await c.req.json().catch(() => null));
+    const input = z.object({}).strict().safeParse(await c.req.json().catch(() => null));
     if (!input.success) return c.json({ error: 'bad_request' }, 400);
     const ip = config.trustProxy
       ? c.req.header('x-forwarded-for')?.split(',').at(-1)?.trim() || 'unknown'
@@ -64,26 +59,6 @@ export function createApp(
     const key = ipKey(ip, config.secret);
     if (!(await coordinator.rate(`session:${key}`, 10, 600000)))
       return c.json({ error: 'rate_limited', retryAfter: 600 }, 429);
-    if (!config.dryRun && config.captchaSecret) {
-      if (!input.data.captchaToken) return c.json({ error: 'captcha_required' }, 403);
-      try {
-        const r = await fetcher('https://api.hcaptcha.com/siteverify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            secret: config.captchaSecret,
-            response: input.data.captchaToken,
-          }),
-          signal: AbortSignal.timeout(5000),
-        });
-        if (!r.ok) throw new Error('provider_unavailable');
-        const data = (await r.json()) as { success: boolean; hostname?: string };
-        if (!data.success) return c.json({ error: 'captcha_failed' }, 403);
-      } catch {
-        if (!(await coordinator.rate(`captcha-outage:${key}`, 2, 600000)))
-          return c.json({ error: 'rate_limited', retryAfter: 600 }, 429);
-      }
-    }
     return c.json(newSession(config.secret));
   });
   app.post('/api/notify', async (c) => {

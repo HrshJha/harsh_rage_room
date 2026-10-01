@@ -15,19 +15,10 @@ services:
       - key: NOTIFY_ENABLED
         value: "true"
       - key: NOTIFY_DRY_RUN
-        value: "true"
+        value: "false"
       - key: ALLOWED_ORIGINS
         sync: false
-      - key: SESSION_HMAC_SECRET
-        generateValue: true
-      - key: REDIS_URL
-        fromService:
-          name: harsh-rage-room-limits
-          type: keyvalue
-          property: connectionString
-  - type: keyvalue
-    name: harsh-rage-room-limits
-    plan: free
-    region: singapore
-    ipAllowList: []
-    maxmemoryPolicy: noeviction
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false

@@ -4,41 +4,6 @@ import { angerKeys, type NotifyEvent } from '../../../shared/contracts';
 const base = (import.meta.env?.VITE_API_BASE || '').replace(/\/$/, '');
 type Pending = { event: NotifyEvent; attempts: number; expires: number };
 const sessions = new Map<string, ReportSession>();
-let scriptPromise: Promise<void> | undefined;
-export async function captchaToken(): Promise<string> {
-  const key = import.meta.env?.VITE_HCAPTCHA_SITE_KEY;
-  if (!key) return '';
-  const w = window as Window & {
-    hcaptcha?: {
-      render: (el: HTMLElement, options: Record<string, unknown>) => string;
-      execute: (id: string, options: { async: boolean }) => Promise<{ response: string }>;
-      remove: (id: string) => void;
-    };
-  };
-  if (!w.hcaptcha) {
-    scriptPromise ??= new Promise<void>((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://js.hcaptcha.com/1/api.js?render=explicit';
-      script.onload = () => resolve();
-      script.onerror = () => {
-        scriptPromise = undefined;
-        script.remove();
-        reject(new Error('Verification unavailable'));
-      };
-      document.head.appendChild(script);
-    });
-    await scriptPromise;
-  }
-  const container = document.createElement('div');
-  document.body.appendChild(container);
-  const id = w.hcaptcha!.render(container, { sitekey: key, size: 'invisible' });
-  try {
-    return (await w.hcaptcha!.execute(id, { async: true })).response;
-  } finally {
-    w.hcaptcha!.remove(id);
-    container.remove();
-  }
-}
 function persist() {
   try {
     const saved = [...sessions.values()]
@@ -74,11 +39,10 @@ class ReportSession {
     this.bootAttempts++;
     this.boot = (async () => {
       try {
-        const challenge = await captchaToken();
         const r = await fetch(`${base}/api/session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ captchaToken: challenge }),
+          body: '{}',
           signal: AbortSignal.timeout(25000),
         });
         if (!r.ok) throw new Error('Session unavailable');
