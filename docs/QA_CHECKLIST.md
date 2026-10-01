@@ -1,5 +1,18 @@
 # Verification record
 
+## Cinematic revision — 1 October 2026
+
+- TypeScript, ESLint, all 75 unit/API/content tests, frontend/API production builds and bundle budgets pass. Final JavaScript is 128.3 KiB gzip; JS/CSS/fonts total 202.6 KiB under the existing budget; Foley remains 72.0 KiB.
+- Full production-browser suite against localhost:4179: **41 passed, 25 intentionally skipped** across desktop Chromium, mobile Chromium and iPhone WebKit. Covers all eight moves, single-tap variants, cancellation before contact, exact readable reduced-motion roasts, named/anonymous payloads, audio decoding/playback/fallback, replay/export, keyboard/offline play and serious/critical accessibility checks. Live Telegram transport was mocked; the dry-run-only live-API test was skipped because the configured API is live.
+- A separate production interaction check confirmed Slap → Punch → Bonk produces COMIC RELIEF with length 3 in the queued notification after the existing transport cooldown.
+- Desktop 1440 × 1000, mobile 390 × 844, small 360 × 640 and landscape 844 × 390 previews were inspected. The complete weapon dock fits the tested small/landscape viewports. Entry, punch contact, chappal flight and readable roast frames are retained in docs/previews. No page errors appeared during the preview capture.
+- Initial checks caught transient entry-fade contrast and legacy mobile-layout conflicts; both were corrected. A development run was interrupted by a reload while saving previews, so final verification used the stable production build.
+- No new hosted deployment or live Telegram send was performed for this revision. Physical-device frame rate, speaker/headphone listening and final summed mix measurements remain external checks.
+
+## Earlier baseline evidence
+
+The following record predates the cinematic revision. Its Lighthouse figures and prior live Telegram acceptance are historical evidence, not measurements of this redesigned build.
+
 Local verification on 1 October 2026, Node 24.14.1. These results describe this build on this machine.
 
 ## Passed

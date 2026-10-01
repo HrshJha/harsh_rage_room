@@ -2,6 +2,8 @@
 
 > **Version** 1.1 · **Date** 2026-10-01 · **Owner** Harsh · **Status** Approved for implementation planning
 > **This file is the product foundation.** The [arcade direction addendum](docs/ARCADE_DIRECTION_ADDENDUM.md) now governs visual identity, named-room entry, attack motion and Telegram copy; the [arcade audio addendum](docs/ARCADE_AUDIO_ADDENDUM.md) governs sound and takes precedence over both earlier sound sections. These are target requirements for the next iteration. The shipped prototype and its open checks are described in [QA_CHECKLIST.md](docs/QA_CHECKLIST.md). The generated topic extracts in `/docs` retain the original PRD sections for reference.
+
+> **October cinematic revision:** The latest implementation uses charcoal and burnt orange, a centered character stage, single-tap weapon controls and per-weapon choreography. [CINEMATIC_MOTION.md](docs/CINEMATIC_MOTION.md) records the implemented timing, interaction and accessibility rules and supersedes older visual/motion proposals below. Audio production requirements still apply.
 > **Implementation amendment — 2026-10-01 (takes precedence over historical sections below):**
 > - Ship all P0 plus Compliment Mode and Sentence Slot Machine. Other P1/P2 remain deferred.
 > - User selected **Vercel frontend + Render Node/Hono API**. All Cloudflare/Worker/Wrangler/Durable Object/Turnstile instructions below are superseded. Use Render Key Value (Redis) for short-lived rate limits, dedupe and send coordination, never analytics. Local uses an in-memory equivalent and can use either dry-run or live Telegram transport. Production live notifications require Redis and hCaptcha; no secrets in Vite.

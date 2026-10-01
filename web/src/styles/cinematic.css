@@ -1846,3 +1846,60 @@ html[data-motion='calm'] .scene-content {
   opacity: 0.8;
   pointer-events: none;
 }
+.roast-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 18px 0 14px;
+}
+.roast-presets-label,
+.roast-or-write {
+  grid-column: 1/-1;
+  color: #c6b99d;
+  font:
+    600 10px 'Rubik Variable',
+    sans-serif;
+  letter-spacing: 1.2px;
+}
+.roast-preset {
+  min-height: 42px;
+  padding: 9px 11px;
+  text-align: left;
+  border: 1px solid #555548;
+  border-radius: 2px;
+  background: #191b16;
+  color: #e7dbc5;
+  font:
+    500 12px/1.35 'Rubik Variable',
+    sans-serif;
+  cursor: pointer;
+}
+.roast-preset:hover,
+.roast-preset:focus-visible {
+  border-color: #d7824e;
+  background: #29241c;
+}
+.roast-preset.selected {
+  border-color: #e7834c;
+  background: #38291e;
+  color: #ffe1bd;
+  box-shadow: inset 3px 0 #e7834c;
+}
+.roast-or-write {
+  margin: 4px 0 9px;
+}
+@media (max-width: 760px) {
+  .roast-presets {
+    gap: 6px;
+    margin: 14px 0 12px;
+  }
+  .roast-preset {
+    min-height: 44px;
+    font-size: 11px;
+  }
+}
+@media (max-width: 360px) {
+  .roast-presets {
+    grid-template-columns: 1fr;
+  }
+}

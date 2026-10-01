@@ -8,6 +8,14 @@ import { useGame } from '../core/store';
 import { weapons, weaponById, score } from '../engine/game';
 import { audio } from '../engine/audio';
 import content from '../content/dialogue.json';
+
+const roastPresets = [
+  'Your code needs a nap.',
+  'Bro debugs by vibes.',
+  'Even your bugs need a software update.',
+  'This ego shipped before the feature did.',
+  'Your commit history needs adult supervision.',
+];
 export default function Room() {
   const fight = useGame((s) => s.fight),
     weapon = useGame((s) => s.weapon),
@@ -276,8 +284,26 @@ export default function Room() {
       {roast && (
         <Modal title="ROAST HARSH" onClose={() => setRoast(false)}>
           <p className="muted">
-            Write your own line. Chota Sher will deliver it exactly as submitted.
+            Pick a quick roast or write your own. You can edit any pick before sending.
           </p>
+          <div className="roast-presets" aria-label="Quick roast options">
+            <span className="roast-presets-label">QUICK ROASTS</span>
+            {roastPresets.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                className={`roast-preset ${roastDraft === preset ? 'selected' : ''}`}
+                aria-pressed={roastDraft === preset}
+                onClick={() => {
+                  setRoastDraft(preset);
+                  document.getElementById('roast-message')?.focus();
+                }}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+          <p className="roast-or-write">OR WRITE YOUR OWN</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -291,6 +317,7 @@ export default function Room() {
             <label className="field-label">
               YOUR ROAST <span>{roastDraft.length}/280</span>
               <textarea
+                id="roast-message"
                 data-autofocus
                 value={roastDraft}
                 onChange={(e) => setRoastDraft(e.target.value)}
