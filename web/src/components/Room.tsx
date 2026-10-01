@@ -10,11 +10,14 @@ import { audio } from '../engine/audio';
 import content from '../content/dialogue.json';
 
 const roastPresets = [
-  'Your code needs a nap.',
-  'Bro debugs by vibes.',
-  'Even your bugs need a software update.',
-  'This ego shipped before the feature did.',
-  'Your commit history needs adult supervision.',
+  'Your code is confidence with no test coverage.',
+  'Even your bugs have started blaming you.',
+  'Your git history needs witness protection.',
+  'That ego shipped. Your skills are still in beta.',
+  'Your code review left you on read.',
+  'Your debugger has trust issues. Understandably.',
+  'Your best feature is the Undo button.',
+  'Stack Overflow needs a break from your searches.',
 ];
 export default function Room() {
   const fight = useGame((s) => s.fight),
